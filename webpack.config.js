@@ -41,18 +41,42 @@ var config = {
   // Where to load modules from
   resolve: {
     modulesDirectories: VENDORS,
-    extensions: ['', '.elm', '.js', '.css']
+    extensions: ['', '.elm', '.styl', '.js', '.css']
   },
 
+  // Stylus options
+  stylus: {
+    use: [require('nib')()],
+    import: ['~nib/lib/nib/index.styl'],
+    preferPathResolver: 'webpack',
+  },
+
+  // Stylint options
+  stylint: {
+    config: '.stylintrc',
+  },
 
   // Module loading options
   module: {
+    // Linters, etc
+    preLoaders: [
+      { // Stylint
+        test: /\.styl/,
+        loader: 'stylint',
+        exclude: VENDOR_RE,
+      },
+    ],
 
     // Files to load
     loaders: [
       { // Elm
         test: /\.elm$/,
         loaders: ['elm-webpack'],
+      },
+      { // Stylus
+        test: /\.styl$/,
+        exclude: /\.u\.styl/,
+        loaders: ['style', 'css', 'stylus'],
       },
       { // Plain CSS
         test: /\.css$/,
