@@ -1,4 +1,5 @@
-startSearching: false
+options:
+  startSearching: false
 entries:
   -
     key: 'g'
