@@ -1,0 +1,25 @@
+{
+  "name": "start",
+  "description": "A start page made in Elm.",
+  "main": "src/index.js",
+  "authors": [
+    "Ethan Chan"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "elm",
+    "start",
+    "page"
+  ],
+  "homepage": "https://github.com/metakirby5/start",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "devDependencies": {
+    "skeleton": "^2.0.4"
+  }
+}
