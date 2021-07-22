@@ -5,36 +5,72 @@ import Html exposing (..)
 import Html.App as App
 import Html.Events exposing (..)
 import Html.Attributes exposing (..)
+import Http
+import Json.Decode as Json
+import Task
 
-main = App.beginnerProgram
-  { model = model
+main = App.program
+  { init = init
   , view = view
-  , update = update }
+  , update = update
+  , subscriptions = \_ -> Sub.none }
 
-type alias Model = Int
-model : Model
-model = 0
+type alias Model =
+  { state : State
+  , topic : String
+  , gif : String }
+type State = Init | Gif | Loading | Error
+init : (Model, Cmd Msg)
+init = (Model Init "" "", Cmd.none)
 
-type Msg = Increment | Decrement | Reset
-update : Msg -> Model -> Model
+type Msg
+  = NoOp
+  | SetTopic String
+  | GetGif
+  | GotGif String
+  | NotGif Http.Error
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    Increment -> model + 1
-    Decrement -> model - 1
-    Reset -> 0
+    NoOp ->
+      model ! []
+    SetTopic topic ->
+      {model | topic = topic} ! []
+    GetGif ->
+      {model | state = Loading} ! [getGif model.topic]
+    GotGif url ->
+      {model | gif = url, state = Gif} ! []
+    NotGif err ->
+      {model | state = Error} ! []
+
+getGif : String -> Cmd Msg
+getGif topic =
+  let api = "https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC&tag="
+  in let decode = Json.at ["data", "image_url"] Json.string
+  in Task.perform NotGif GotGif <| Http.get decode <| api ++ topic
 
 view : Model -> Html Msg
 view model =
-  div [style [("padding", "4%")]]
+  let content = case model.state of
+    Init -> h1 [class "twelve columns"] [text "Enter topic!"]
+    Gif -> img [class "twelve columns" , src model.gif] []
+    Loading -> h1 [class "twelve columns"] [text "Loading..."]
+    Error -> h1 [class "twelve columns"] [text "Error!"]
+  in div [class "main"]
     [ div [class "row"]
-      [ div [class "twelve columns", style [("text-align", "center")]]
-        [text (toString model)] ]
-    , div [class "row", style [("margin-top", "4%")]]
-      [ button [class "one-third column", onClick Decrement] [text "-"]
-      , button [class "one-third column", onClick Reset] [text "Reset"]
-      , button [class "one-third column", onClick Increment] [text "+"]
-      ]
-    ]
+      [ input
+        [ class "twelve columns"
+        , type' "text"
+        , placeholder "Topic"
+        , value model.topic
+        , onInput SetTopic
+        , onEnter GetGif ] []
+      , content ]]
+
+onEnter : Msg -> Attribute Msg
+onEnter msg =
+  let tagger code = if code == 13 then msg else NoOp
+  in on "keydown" (Json.map tagger keyCode)
 
 -- main : Program (Maybe Model)
 -- main = App.programWithFlags
